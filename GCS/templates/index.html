@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sky Guards GCS</title>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css"/>
+
+    <style>
+        body { margin: 0; padding: 0; }
+        #map { height: 100vh; width: 100%; }
+        
+        #ui-controls {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 1000;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+            width: 300px;
+        }
+        textarea {
+            width: 100%;
+            height: 80px;
+            margin-top: 10px;
+            font-family: monospace;
+            font-size: 11px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="map"></div>
+
+    <div id="ui-controls">
+        <h3>Mission Planner</h3>
+        <p>Step 1: Use the Pentagon icon on the left to draw a zone.</p>
+        <p>Step 2: Click Deploy.</p>
+        
+        <textarea id="coords-display" placeholder="Coordinates will appear here..." readonly></textarea>
+        
+        <br><br>
+        <button onclick="deploySwarm()" style="width: 100%; padding: 10px; background: green; color: white; font-weight: bold; cursor: pointer;">DEPLOY SWARM</button>
+        <div id="status" style="margin-top: 10px;">Status: Standby</div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
+
+    <script>
+        // --- A. Setup Map ---
+        // Centered on KFUPM Stadium area
+        var map = L.map('map').setView([26.3043, 50.1453], 16);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap'
+        }).addTo(map);
+
+        // --- B. Add Draw Controls ---
+        // FeatureGroup is to store editable layers
+        var drawnItems = new L.FeatureGroup();
+        map.addLayer(drawnItems);
+
+        // Configure the draw toolbar (only allow Polygons for now)
+        var drawControl = new L.Control.Draw({
+            draw: {
+                polygon: true,
+                marker: false,
+                circle: false,
+                rectangle: false,
+                polyline: false,
+                circlemarker: false
+            },
+            edit: {
+                featureGroup: drawnItems
+            }
+        });
+        map.addControl(drawControl);
+
+        // --- C. Handle "Draw Created" Event ---
+        var currentCoordinates = []; // Variable to store the final list
+
+        map.on(L.Draw.Event.CREATED, function (e) {
+            var layer = e.layer;
+            
+            // Clear previous shapes (we only want one zone for now)
+            drawnItems.clearLayers();
+            
+            // Add new shape to map
+            drawnItems.addLayer(layer);
+
+            // Extract Lat/Lon
+            // layer.getLatLngs() returns an array of objects
+            var latlngs = layer.getLatLngs()[0]; 
+            
+            // Format them for display/sending
+            currentCoordinates = latlngs.map(function(point) {
+                return [point.lat, point.lng];
+            });
+
+            // Show in the text box
+            document.getElementById('coords-display').value = JSON.stringify(currentCoordinates);
+            document.getElementById('status').innerText = "Status: Zone Defined";
+        });
+
+        // --- D. Deploy Button ---
+        function deploySwarm() {
+            if (currentCoordinates.length === 0) {
+                alert("Please draw a polygon first!");
+                return;
+            }
+            
+            // Visual Feedback
+            var statusDiv = document.getElementById('status');
+            statusDiv.innerText = "Status: Transmitting Data...";
+            statusDiv.style.color = "blue";
+
+            // 1. Send Data using Fetch API
+            fetch('/deploy', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ coordinates: currentCoordinates }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                // 2. Handle Success
+                console.log('Success:', data);
+                statusDiv.innerText = "Status: MISSION UPLOADED";
+                statusDiv.style.color = "green";
+                alert("Swarm Deployment Authorization Received!");
+            })
+            .catch((error) => {
+                // 3. Handle Error
+                console.error('Error:', error);
+                statusDiv.innerText = "Status: CONNECTION ERROR";
+                statusDiv.style.color = "red";
+            });
+        }
+    </script>
+</body>
+</html>

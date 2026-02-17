@@ -1,0 +1,9 @@
+"THIS FILE CONTAINS ALL PYTHON LIBRARY VERSIONS USED FOR MY SCRIPTS - VENU ACTIVATED!"
+
+# To check a library version = [ python3 -m pip show <library> ]
+
+------------------
+
+Python          3.12.3
+MAVSDK          3.10.2
+MAVProxy        1.8.74

@@ -1,0 +1,29 @@
+Trying to connect VSCODE to WSL & Python interpeter. 
+Install extensions & Open it with WSL connection & Change the interpeter 
+
+Trying to install a package: 
+Ensure (venu activated); python3 -m pip install <package>
+
+
+
+Trying to connect all drones to QGCS: 
+
+1st Trial (The problem could have been drones overwrite the same Id): 
+sim_vehicle.py -v Copter --console -I0 -L KFUPM  --out=udp:127.0.0.1:14540 --out=udp:127.0.0.1:14550 
+sim_vehicle.py -v Copter --console -I1 -L KFUPM  --out=udp:127.0.0.1:14541 --out=udp:127.0.0.1:14551
+sim_vehicle.py -v Copter --console -I2 -L KFUPM  --out=udp:127.0.0.1:14542 --out=udp:127.0.0.1:14552
+sim_vehicle.py -v Copter --console -I3 -L KFUPM  --out=udp:127.0.0.1:14543 --out=udp:127.0.0.1:14553
+
+2nd Trial (Ids Specefied, The problem was that the drone cannot get over the Windows firewall with address (127.0.0.1))
+sim_vehicle.py -v Copter --console -I0 -L KFUPM --sysid 1 --out=udp:127.0.0.1:14540 --out=udp:127.0.0.1:14550
+sim_vehicle.py -v Copter --console -I1 -L KFUPM --sysid 2 --out=udp:127.0.0.1:14541 --out=udp:127.0.0.1:14551
+sim_vehicle.py -v Copter --console -I2 -L KFUPM --sysid 3 --out=udp:127.0.0.1:14542 --out=udp:127.0.0.1:14550
+sim_vehicle.py -v Copter --console -I3 -L KFUPM --sysid 4 --out=udp:127.0.0.1:14543 --out=udp:127.0.0.1:14550
+
+3rd Trial (QGCS address changed accordingly, this address was found from the drone output in the termial while running)
+sim_vehicle.py -v Copter --console -I0 -L KFUPM --sysid 1 --out=udp:127.0.0.1:14540 --out=udp:172.30.224.1:14550
+sim_vehicle.py -v Copter --console -I1 -L KFUPM --sysid 2 --out=udp:127.0.0.1:14541 --out=udp:172.30.224.1:14551
+sim_vehicle.py -v Copter --console -I2 -L KFUPM --sysid 3 --out=udp:127.0.0.1:14542 --out=udp:172.30.224.1:14552
+sim_vehicle.py -v Copter --console -I3 -L KFUPM --sysid 4 --out=udp:127.0.0.1:14543 --out=udp:172.30.224.1:14553
+
+sim_vehicle.py -v vehicle --console -instance_number -L KFUPM --assign_id n --out=local_address_mavsdk --out=windows_address_QGCS

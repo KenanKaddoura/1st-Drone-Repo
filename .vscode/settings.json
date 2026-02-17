@@ -1,0 +1,6 @@
+{
+    "python.analysis.extraPaths": [
+        "./scripts/missions",
+        "./scripts/missions/drawn_polygon_mission"
+    ]
+}
